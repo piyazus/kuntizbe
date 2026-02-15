@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 
 const domains = [
-    { id: "unisonai", label: "UnisonAI", color: "#FF6B6B", bg: "#1A0A0A", icon: "🤝", win: "KPMG + 2 companies", status: "Define your role", urgency: "HIGH", days: 180, progress: 25 },
-    { id: "research", label: "Research", color: "#4ECDC4", bg: "#0A1A1A", icon: "📄", win: "Published paper", status: "Not started", urgency: "HIGH", days: 210, progress: 10 },
-    { id: "sanash", label: "Sanash", color: "#45B7D1", bg: "#0A1218", icon: "🚌", win: "Gov deal + paper", status: "No clear vision", urgency: "MEDIUM", days: 180, progress: 15 },
-    { id: "sevenstudio", label: "Seven Studio", color: "#F7DC6F", bg: "#1A1800", icon: "🚀", win: "3 cohorts, 1000+ teams", status: "Concept stage", urgency: "MEDIUM", days: 180, progress: 20 },
-    { id: "n8n", label: "n8n Business", color: "#A29BFE", bg: "#0D0A1A", icon: "⚡", win: "Stable income", status: "Learning phase", urgency: "MEDIUM", days: 180, progress: 35 },
-    { id: "sat", label: "SAT", color: "#FF4757", bg: "#1A0608", icon: "🎯", win: "1550+ score", status: "1300 → need +250", urgency: "CRITICAL", days: 29, progress: 52 },
-    { id: "ap", label: "AP Exams", color: "#FFA502", bg: "#0A0E00", icon: "📐", win: "Score 4-5 both", status: "Behind on curriculum", urgency: "HIGH", days: 88, progress: 30 },
-    { id: "reading", label: "Inner State", color: "#2ED573", bg: "#0A1A0D", icon: "📖", win: "Daily 30min habit", status: "Inconsistent", urgency: "MEDIUM", days: 240, progress: 45 },
+    { id: "unisonai", label: "UnisonAI", color: "#FF6B6B", bg: "#1A0A0A", icon: "🤝", win: "KPMG + 2 companies", status: "Define your role", urgency: "HIGH", days: 180, progress: 0 },
+    { id: "research", label: "Research", color: "#4ECDC4", bg: "#0A1A1A", icon: "📄", win: "Published paper", status: "Not started", urgency: "HIGH", days: 210, progress: 0 },
+    { id: "sanash", label: "Sanash", color: "#45B7D1", bg: "#0A1218", icon: "🚌", win: "Gov deal + paper", status: "No clear vision", urgency: "MEDIUM", days: 180, progress: 0 },
+    { id: "sevenstudio", label: "Seven Studio", color: "#F7DC6F", bg: "#1A1800", icon: "🚀", win: "3 cohorts, 1000+ teams", status: "Concept stage", urgency: "MEDIUM", days: 180, progress: 0 },
+    { id: "n8n", label: "n8n Business", color: "#A29BFE", bg: "#0D0A1A", icon: "⚡", win: "Stable income", status: "Learning phase", urgency: "MEDIUM", days: 180, progress: 0 },
+    { id: "sat", label: "SAT", color: "#FF4757", bg: "#1A0608", icon: "🎯", win: "1550+ score", status: "1300 → need +250", urgency: "CRITICAL", days: 29, progress: 0 },
+    { id: "ap", label: "AP Exams", color: "#FFA502", bg: "#0A0E00", icon: "📐", win: "Score 4-5 both", status: "Behind on curriculum", urgency: "HIGH", days: 88, progress: 0 },
+    { id: "reading", label: "Inner State", color: "#2ED573", bg: "#0A1A0D", icon: "📖", win: "Daily 30min habit", status: "Inconsistent", urgency: "MEDIUM", days: 240, progress: 0 },
 ];
 
 const urgencyColor = { CRITICAL: "#FF4757", HIGH: "#FFA502", MEDIUM: "#2ED573" };
@@ -130,9 +130,9 @@ const RadarChart = ({ data }) => {
 };
 
 // AI Chat Component
-const JarvisChat = ({ domains, onUpdateProgress }) => {
+const JarvisChat = ({ domains, onSetProgress }) => {
     const [messages, setMessages] = useState([
-        { role: "assistant", content: "JARVIS online. What do you need?" }
+        { role: "assistant", content: "JARVIS online. What do you need?\n\nTell me about your progress on any project and I'll evaluate and update your progress bar." }
     ]);
     const [input, setInput] = useState("");
     const [isThinking, setIsThinking] = useState(false);
@@ -157,7 +157,19 @@ const JarvisChat = ({ domains, onUpdateProgress }) => {
             });
 
             const data = await response.json();
-            setMessages(prev => [...prev, { role: "assistant", content: data.reply || "System error. Retry." }]);
+
+            // Apply any progress updates from the AI
+            if (data.progressUpdates && Array.isArray(data.progressUpdates)) {
+                for (const update of data.progressUpdates) {
+                    if (update.id && typeof update.progress === 'number') {
+                        onSetProgress(update.id, update.progress);
+                    }
+                }
+            }
+
+            // Show reply without the raw JSON block
+            const cleanReply = (data.reply || "System error. Retry.").replace(/\[PROGRESS_UPDATE\]\s*```json[\s\S]*?```/g, '').trim();
+            setMessages(prev => [...prev, { role: "assistant", content: cleanReply || "Progress updated." }]);
         } catch (err) {
             setMessages(prev => [...prev, { role: "assistant", content: "Connection error. Is the backend running?" }]);
         } finally {
@@ -342,17 +354,16 @@ export default function App() {
         return () => clearInterval(interval);
     }, [prayerTimes]);
 
-    const updateProgress = (id, delta) => {
+    const setProgress = (id, newValue) => {
+        const clamped = Math.min(100, Math.max(0, newValue));
         setDomainsState(prev => prev.map(d => {
             if (d.id !== id) return d;
-            const newProgress = Math.min(100, Math.max(0, d.progress + delta));
-            // Persist to backend
             fetch(`/api/domains/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ progress: newProgress })
+                body: JSON.stringify({ progress: clamped })
             }).catch(() => { });
-            return { ...d, progress: newProgress };
+            return { ...d, progress: clamped };
         }));
     };
 
@@ -528,29 +539,12 @@ export default function App() {
                                     </div>
 
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <div style={{ display: "flex", gap: "6px" }}>
-                                            <button
-                                                onClick={() => updateProgress(d.id, -5)}
-                                                style={{
-                                                    background: "#0A0A16",
-                                                    border: "1px solid #1A1A3A",
-                                                    color: "#555577",
-                                                    padding: "2px 8px",
-                                                    fontSize: "10px",
-                                                    cursor: "pointer"
-                                                }}
-                                            >-5%</button>
-                                            <button
-                                                onClick={() => updateProgress(d.id, 5)}
-                                                style={{
-                                                    background: "#0A0A16",
-                                                    border: "1px solid #1A1A3A",
-                                                    color: "#555577",
-                                                    padding: "2px 8px",
-                                                    fontSize: "10px",
-                                                    cursor: "pointer"
-                                                }}
-                                            >+5%</button>
+                                        <div style={{
+                                            fontSize: "9px",
+                                            color: "#444466",
+                                            letterSpacing: "1px"
+                                        }}>
+                                            AI-EVALUATED
                                         </div>
                                         <div style={{
                                             background: urgencyColor[d.urgency] + "22",
@@ -633,7 +627,7 @@ export default function App() {
                 {/* JARVIS AI TAB */}
                 {activeTab === "jarvis" && (
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", minHeight: "500px" }}>
-                        <JarvisChat domains={domainsState} onUpdateProgress={updateProgress} />
+                        <JarvisChat domains={domainsState} onSetProgress={setProgress} />
 
                         <div>
                             <div style={{ fontSize: "11px", color: "#555577", letterSpacing: "3px", marginBottom: "16px" }}>

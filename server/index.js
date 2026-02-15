@@ -18,14 +18,14 @@ app.use(express.json());
 
 // Default domain data for seeding
 const defaultDomains = [
-    { id: "unisonai", label: "UnisonAI", color: "#FF6B6B", bg: "#1A0A0A", icon: "🤝", win: "KPMG + 2 companies", status: "Define your role", urgency: "HIGH", days: 180, progress: 25 },
-    { id: "research", label: "Research", color: "#4ECDC4", bg: "#0A1A1A", icon: "📄", win: "Published paper", status: "Not started", urgency: "HIGH", days: 210, progress: 10 },
-    { id: "sanash", label: "Sanash", color: "#45B7D1", bg: "#0A1218", icon: "🚌", win: "Gov deal + paper", status: "No clear vision", urgency: "MEDIUM", days: 180, progress: 15 },
-    { id: "sevenstudio", label: "Seven Studio", color: "#F7DC6F", bg: "#1A1800", icon: "🚀", win: "3 cohorts, 1000+ teams", status: "Concept stage", urgency: "MEDIUM", days: 180, progress: 20 },
-    { id: "n8n", label: "n8n Business", color: "#A29BFE", bg: "#0D0A1A", icon: "⚡", win: "Stable income", status: "Learning phase", urgency: "MEDIUM", days: 180, progress: 35 },
-    { id: "sat", label: "SAT", color: "#FF4757", bg: "#1A0608", icon: "🎯", win: "1550+ score", status: "1300 → need +250", urgency: "CRITICAL", days: 29, progress: 52 },
-    { id: "ap", label: "AP Exams", color: "#FFA502", bg: "#0A0E00", icon: "📐", win: "Score 4-5 both", status: "Behind on curriculum", urgency: "HIGH", days: 88, progress: 30 },
-    { id: "reading", label: "Inner State", color: "#2ED573", bg: "#0A1A0D", icon: "📖", win: "Daily 30min habit", status: "Inconsistent", urgency: "MEDIUM", days: 240, progress: 45 },
+    { id: "unisonai", label: "UnisonAI", color: "#FF6B6B", bg: "#1A0A0A", icon: "🤝", win: "KPMG + 2 companies", status: "Define your role", urgency: "HIGH", days: 180, progress: 0 },
+    { id: "research", label: "Research", color: "#4ECDC4", bg: "#0A1A1A", icon: "📄", win: "Published paper", status: "Not started", urgency: "HIGH", days: 210, progress: 0 },
+    { id: "sanash", label: "Sanash", color: "#45B7D1", bg: "#0A1218", icon: "🚌", win: "Gov deal + paper", status: "No clear vision", urgency: "MEDIUM", days: 180, progress: 0 },
+    { id: "sevenstudio", label: "Seven Studio", color: "#F7DC6F", bg: "#1A1800", icon: "🚀", win: "3 cohorts, 1000+ teams", status: "Concept stage", urgency: "MEDIUM", days: 180, progress: 0 },
+    { id: "n8n", label: "n8n Business", color: "#A29BFE", bg: "#0D0A1A", icon: "⚡", win: "Stable income", status: "Learning phase", urgency: "MEDIUM", days: 180, progress: 0 },
+    { id: "sat", label: "SAT", color: "#FF4757", bg: "#1A0608", icon: "🎯", win: "1550+ score", status: "1300 → need +250", urgency: "CRITICAL", days: 29, progress: 0 },
+    { id: "ap", label: "AP Exams", color: "#FFA502", bg: "#0A0E00", icon: "📐", win: "Score 4-5 both", status: "Behind on curriculum", urgency: "HIGH", days: 88, progress: 0 },
+    { id: "reading", label: "Inner State", color: "#2ED573", bg: "#0A1A0D", icon: "📖", win: "Daily 30min habit", status: "Inconsistent", urgency: "MEDIUM", days: 240, progress: 0 },
 ];
 
 // Seed database on first run
@@ -58,6 +58,20 @@ app.put('/api/domains/:id', (req, res) => {
     } catch (err) {
         console.error('Update domain error:', err.message);
         res.status(500).json({ error: 'Failed to update domain' });
+    }
+});
+
+// Reset all domain progress to 0
+app.post('/api/domains/reset', (req, res) => {
+    try {
+        const domains = getDomains();
+        for (const d of domains) {
+            updateDomainProgress(d.id, 0);
+        }
+        res.json({ ok: true, message: 'All progress reset to 0' });
+    } catch (err) {
+        console.error('Reset domains error:', err.message);
+        res.status(500).json({ error: 'Failed to reset domains' });
     }
 });
 
@@ -130,6 +144,28 @@ YOUR CAPABILITIES:
    - Allocate specific time blocks
    - Prioritize ruthlessly — some things must be dropped
 
+5. PROGRESS EVALUATION: This is CRITICAL. You control the progress bars.
+   - When the user tells you about work they've done, you MUST evaluate and update progress.
+   - When asked to evaluate progress, analyze what's been accomplished and set a fair progress percentage.
+   - Be HARSH but FAIR. Don't inflate progress.
+   - Consider: actual deliverables produced, not just time spent.
+
+   To update progress, you MUST include this block at the END of your message:
+   [PROGRESS_UPDATE]
+   \`\`\`json
+   [{"id": "domain_id", "progress": number_0_to_100}]
+   \`\`\`
+   
+   Valid domain IDs: unisonai, research, sanash, sevenstudio, n8n, sat, ap, reading
+   
+   Example: If user says "I finished my SAT practice test and scored 1400", you might set:
+   [PROGRESS_UPDATE]
+   \`\`\`json
+   [{"id": "sat", "progress": 60}]
+   \`\`\`
+   
+   You can update multiple domains at once. Only include this block when progress should change.
+
 Current date: ${today}
 Current goals:
 ${context || 'No domains loaded.'}
@@ -140,7 +176,9 @@ RULES:
 - If spreading too thin, prove it with math
 - When creating projects, be DETAILED and ACTIONABLE
 - Use bullet points and clear structure
-- NEVER be a yes-man. Diyas needs truth, not comfort.`;
+- NEVER be a yes-man. Diyas needs truth, not comfort.
+- ALWAYS include [PROGRESS_UPDATE] block when the user reports work done or asks for progress evaluation
+- Progress bars start at 0. Only YOU can move them. Evaluate honestly.`;
 
         const conversationMessages = [];
         if (history && history.length > 0) {
@@ -177,7 +215,28 @@ RULES:
 
         const reply = data.content?.[0]?.text || 'System error. Retry.';
         addChatMessage('assistant', reply);
-        res.json({ reply });
+
+        // Parse progress updates from AI response
+        const progressUpdates = [];
+        const progressMatch = reply.match(/\[PROGRESS_UPDATE\]\s*```json\s*([\s\S]*?)```/);
+        if (progressMatch) {
+            try {
+                const updates = JSON.parse(progressMatch[1]);
+                if (Array.isArray(updates)) {
+                    for (const u of updates) {
+                        if (u.id && typeof u.progress === 'number') {
+                            const clamped = Math.min(100, Math.max(0, u.progress));
+                            updateDomainProgress(u.id, clamped);
+                            progressUpdates.push({ id: u.id, progress: clamped });
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to parse progress updates:', e.message);
+            }
+        }
+
+        res.json({ reply, progressUpdates });
 
     } catch (err) {
         console.error('Server error:', err.message);
