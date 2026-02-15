@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL || "";
+
 const domains = [
     { id: "unisonai", label: "UnisonAI", color: "#FF6B6B", bg: "#1A0A0A", icon: "🤝", win: "KPMG + 2 companies", status: "Define your role", urgency: "HIGH", days: 180, progress: 0 },
     { id: "research", label: "Research", color: "#4ECDC4", bg: "#0A1A1A", icon: "📄", win: "Published paper", status: "Not started", urgency: "HIGH", days: 210, progress: 0 },
@@ -146,7 +148,7 @@ const JarvisChat = ({ domains, onSetProgress }) => {
         setIsThinking(true);
 
         try {
-            const response = await fetch("/api/chat", {
+            const response = await fetch(`${API_URL}/api/chat`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -305,7 +307,7 @@ export default function App() {
 
     // Load domains from DB on mount
     useEffect(() => {
-        fetch('/api/domains').then(r => r.json()).then(data => {
+        fetch(`${API_URL}/api/domains`).then(r => r.json()).then(data => {
             if (data && data.length > 0) setDomainsState(data);
         }).catch(() => { });
     }, []);
@@ -315,8 +317,8 @@ export default function App() {
         if (!ramadan) return;
         setPrayerLoading(true);
         Promise.all([
-            fetch('/api/prayer-times').then(r => r.json()),
-            fetch('/api/prayer-times/month').then(r => r.json())
+            fetch(`${API_URL}/api/prayer-times`).then(r => r.json()),
+            fetch(`${API_URL}/api/prayer-times/month`).then(r => r.json())
         ]).then(([daily, monthly]) => {
             setPrayerTimes(daily);
             setMonthlyPrayers(monthly);
@@ -358,7 +360,7 @@ export default function App() {
         const clamped = Math.min(100, Math.max(0, newValue));
         setDomainsState(prev => prev.map(d => {
             if (d.id !== id) return d;
-            fetch(`/api/domains/${id}`, {
+            fetch(`${API_URL}/api/domains/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ progress: clamped })
