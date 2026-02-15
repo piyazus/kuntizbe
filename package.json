@@ -3,25 +3,21 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "dev": "concurrently \"vite\" \"node server/index.js\"",
-    "dev:frontend": "vite",
-    "dev:backend": "node server/index.js",
-    "build": "vite build",
-    "preview": "vite preview",
-    "start": "node server/index.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.95.3",
+    "next": "^16.1.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
     "better-sqlite3": "^11.10.0",
     "concurrently": "^9.2.1",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
-    "express": "^4.22.1",
-    "vite": "^6.1.0"
+    "express": "^4.22.1"
   }
 }

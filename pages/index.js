@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-const API_URL = import.meta.env.VITE_API_URL || "";
+const API_URL = "";
 
 const domains = [
     { id: "unisonai", label: "UnisonAI", color: "#FF6B6B", bg: "#1A0A0A", icon: "🤝", win: "KPMG + 2 companies", status: "Define your role", urgency: "HIGH", days: 180, progress: 0 },
@@ -295,7 +295,7 @@ const JarvisChat = ({ domains, onSetProgress }) => {
     );
 };
 
-export default function App() {
+export default function Home() {
     const [activeTab, setActiveTab] = useState("overview");
     const [ramadan, setRamadan] = useState(false);
     const [domainsState, setDomainsState] = useState(domains);
@@ -378,18 +378,6 @@ export default function App() {
             padding: "0",
             overflowX: "hidden"
         }}>
-            <style>{`
-        @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
-        @keyframes slideIn { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
-        @keyframes glow { 0%,100%{box-shadow:0 0 8px #FF4757;} 50%{box-shadow:0 0 24px #FF4757, 0 0 48px #FF4757;} }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .domain-card:hover { transform: translateY(-3px); transition: transform 0.2s; }
-        .tab-btn:hover { background: rgba(255,255,255,0.08) !important; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0A0A16; }
-        ::-webkit-scrollbar-thumb { background: #1A1A3A; }
-      `}</style>
-
             {/* Header */}
             <div style={{
                 background: "linear-gradient(180deg, #0D0D1A 0%, #080810 100%)",

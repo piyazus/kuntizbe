@@ -1,4 +1,4 @@
-const { supabase } = require('./_lib/supabase');
+const { supabase } = require('../_lib/supabase');
 
 const defaultDomains = [
     { id: "unisonai", label: "UnisonAI", color: "#FF6B6B", bg: "#1A0A0A", icon: "🤝", win: "KPMG + 2 companies", status: "Define your role", urgency: "HIGH", days: 180, progress: 0 },
