@@ -2,10 +2,14 @@
     "buildCommand": "vite build",
     "outputDirectory": "dist",
     "installCommand": "npm install",
-    "functions": {
-        "api/**/*.js": {
-            "memory": 256,
-            "maxDuration": 30
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "/api/$1"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
         }
-    }
+    ]
 }
