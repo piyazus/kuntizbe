@@ -1,9 +1,7 @@
-import { supabase } from './_lib/supabase.mjs';
+const { supabase } = require('./_lib/supabase');
 
 function buildStatus(domains) {
-    if (!domains || !domains.length) {
-        return '🔴 No domains loaded';
-    }
+    if (!domains || !domains.length) return '🔴 No domains loaded';
     let lines = [];
     domains.filter(d => d.urgency === 'CRITICAL').forEach(d => lines.push(`🔴 ${d.label}: ${d.progress}% — ${d.days}d left — CRITICAL`));
     domains.filter(d => d.urgency === 'HIGH').forEach(d => lines.push(`🟡 ${d.label}: ${d.progress}% — ${d.days}d left`));
@@ -27,13 +25,12 @@ function getFallbackReply(message, domains) {
     return key ? fallbacks[key] : "Be specific. What domain? What's the block? I can't help with vague.";
 }
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    // GET = chat history
     if (req.method === 'GET') {
         try {
             const limit = parseInt(req.query.limit) || 50;
@@ -50,7 +47,6 @@ export default async function handler(req, res) {
         }
     }
 
-    // POST = send message
     if (req.method === 'POST') {
         const { message, domains, history } = req.body;
 
@@ -58,7 +54,6 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Message is required' });
         }
 
-        // Save user message
         await supabase.from('chat_history').insert({ role: 'user', content: message });
 
         const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -181,7 +176,6 @@ RULES:
             const reply = data.content?.[0]?.text || 'System error. Retry.';
             await supabase.from('chat_history').insert({ role: 'assistant', content: reply });
 
-            // Parse progress updates from AI response
             const progressUpdates = [];
             const progressMatch = reply.match(/\[PROGRESS_UPDATE\]\s*```json\s*([\s\S]*?)```/);
             if (progressMatch) {
@@ -215,4 +209,4 @@ RULES:
     }
 
     res.status(405).json({ error: 'Method not allowed' });
-}
+};

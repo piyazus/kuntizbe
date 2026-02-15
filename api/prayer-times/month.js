@@ -20,9 +20,7 @@ async function fetchYearData(year) {
     const response = await fetch(url);
     const json = await response.json();
 
-    if (!json.result || json.result.length === 0) {
-        return null;
-    }
+    if (!json.result || json.result.length === 0) return null;
 
     return json.result.map(day => ({
         date: formatDateFromStr(day.Date),
@@ -42,15 +40,10 @@ async function fetchYearData(year) {
     }));
 }
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     if (req.method === 'OPTIONS') return res.status(200).end();
-
-    if (req.method !== 'GET') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
+    if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
         const now = new Date();
@@ -58,7 +51,7 @@ export default async function handler(req, res) {
         const year = parseInt(req.query.year) || now.getFullYear();
 
         const yearData = await fetchYearData(year);
-        if (!yearData) throw new Error('ДУМК API error');
+        if (!yearData) throw new Error('API error');
 
         const days = yearData.filter(d => {
             const parts = d.Date.split('-');
@@ -70,4 +63,4 @@ export default async function handler(req, res) {
         console.error('Monthly prayer times error:', err.message);
         res.status(500).json({ error: 'Failed to fetch monthly prayer times' });
     }
-}
+};

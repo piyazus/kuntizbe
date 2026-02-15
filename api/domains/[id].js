@@ -1,6 +1,6 @@
-import { supabase } from '../_lib/supabase.mjs';
+const { supabase } = require('../_lib/supabase');
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'PUT, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -32,4 +32,4 @@ export default async function handler(req, res) {
         console.error('Update domain error:', err.message);
         res.status(500).json({ error: 'Failed to update domain' });
     }
-}
+};

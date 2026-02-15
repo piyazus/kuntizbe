@@ -1,4 +1,4 @@
-import { supabase } from '../_lib/supabase.mjs';
+const { supabase } = require('./_lib/supabase');
 
 const defaultDomains = [
     { id: "unisonai", label: "UnisonAI", color: "#FF6B6B", bg: "#1A0A0A", icon: "🤝", win: "KPMG + 2 companies", status: "Define your role", urgency: "HIGH", days: 180, progress: 0 },
@@ -11,8 +11,7 @@ const defaultDomains = [
     { id: "reading", label: "Inner State", color: "#2ED573", bg: "#0A1A0D", icon: "📖", win: "Daily 30min habit", status: "Inconsistent", urgency: "MEDIUM", days: 240, progress: 0 },
 ];
 
-export default async function handler(req, res) {
-    // CORS
+module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -27,7 +26,6 @@ export default async function handler(req, res) {
 
             if (error) throw error;
 
-            // Seed if empty
             if (!data || data.length === 0) {
                 const { data: seeded, error: seedErr } = await supabase
                     .from('domains')
@@ -41,7 +39,6 @@ export default async function handler(req, res) {
         }
 
         if (req.method === 'POST') {
-            // Reset all progress to 0
             const { error } = await supabase
                 .from('domains')
                 .update({ progress: 0 })
@@ -56,4 +53,4 @@ export default async function handler(req, res) {
         console.error('Domains error:', err.message);
         res.status(500).json({ error: 'Failed to handle domains request' });
     }
-}
+};

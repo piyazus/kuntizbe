@@ -3,7 +3,7 @@
     "outputDirectory": "dist",
     "installCommand": "npm install",
     "functions": {
-        "api/**/*.mjs": {
+        "api/**/*.js": {
             "memory": 256,
             "maxDuration": 30
         }

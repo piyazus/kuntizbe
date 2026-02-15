@@ -1,4 +1,4 @@
-export default function handler(req, res) {
+module.exports = (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.json({
         status: 'JARVIS backend online',
@@ -6,4 +6,4 @@ export default function handler(req, res) {
         database: 'Supabase PostgreSQL',
         prayerTimes: 'ДУМК Kazakhstan API'
     });
-}
+};
